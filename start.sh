@@ -20,8 +20,7 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-echo_green "Assuming Neo4j and Ollama are running locally."
-echo "Ensure the 'mistral' model is available in your Ollama instance."
+echo_green "Assuming Neo4j and Ollama are running locally with the 'gemma3:1b' model available."
 
 # 2. Install Python dependencies
 echo_green "Installing Python dependencies from requirements.txt..."

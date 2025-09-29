@@ -24,7 +24,7 @@ class KnowledgeGraphService:
 
         self.llm = OllamaLLM(
             base_url=self.ollama_base_url,
-            model="mistral",
+            model="gemma3:1b",
             temperature=0
         )
 
@@ -69,7 +69,7 @@ class KnowledgeGraphService:
 # kg_service = KnowledgeGraphService()
 # kg_service.text_to_graph("Elon Musk is the CEO of Tesla and SpaceX.")
 
-from langchain.chains import GraphCypherQAChain
+from langchain_neo4j.chains import GraphCypherQAChain
 
 class ReasoningService:
     def __init__(self):
@@ -86,7 +86,7 @@ class ReasoningService:
 
         self.llm = OllamaLLM(
             base_url=self.ollama_base_url,
-            model="mistral",
+            model="gemma3:1b",
             temperature=0
         )
 
