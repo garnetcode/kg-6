@@ -1,9 +1,8 @@
 from django.urls import path
-from . import views
+from .views import ChatView
 
 app_name = 'rag_agent'
 
 urlpatterns = [
-    path('', views.chat_view, name='chat'),
-    path('api/chat/', views.ChatAPIView.as_view(), name='chat_api'),
+    path('', ChatView.as_view(), name='chat'),
 ]

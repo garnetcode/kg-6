@@ -36,6 +36,6 @@ echo_green "Ingesting data into the Knowledge Graph. This is a one-time setup an
 ./manage.py ingest_data --clear
 
 # 5. Start the Django development server
-echo_green "Starting the Django development server at http://0.0.0.0:8000/"
+echo_green "Starting the Django development server at http://0.0.0.0:8007/"
 echo "You can now access the application in your browser."
-./manage.py runserver 0.0.0.0:8000
+./manage.py runserver 0.0.0.0:8007

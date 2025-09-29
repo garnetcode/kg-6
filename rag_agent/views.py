@@ -1,25 +1,24 @@
 from django.shortcuts import render
+from django.apps import apps
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-def chat_view(request):
+class ChatView(APIView):
     """
-    Renders the main chat interface.
+    Handles both rendering the chat page (GET) and processing chat API requests (POST).
     """
-    return render(request, 'rag_agent/chat.html')
+    def get(self, request, *args, **kwargs):
+        """
+        Renders the main chat interface.
+        """
+        return render(request, 'rag_agent/chat.html')
 
-from django.apps import apps
-from .services import ReasoningService
-
-class ChatAPIView(APIView):
-    """
-    API endpoint for handling chat messages.
-    This view receives a question from the user, passes it to the
-    ReasoningService, and returns the KG-grounded answer.
-    """
     def post(self, request, *args, **kwargs):
-        # Access the shared ReasoningService instance from the app config.
+        """
+        Handles chat messages from the user, passes them to the
+        ReasoningService, and returns the KG-grounded answer.
+        """
         rag_agent_config = apps.get_app_config('rag_agent')
         reasoning_service = rag_agent_config.reasoning_service
 
@@ -40,8 +39,6 @@ class ChatAPIView(APIView):
             answer = reasoning_service.query(question)
             return Response({"answer": answer}, status=status.HTTP_200_OK)
         except Exception as e:
-            # Log the exception details for debugging
-            # logger.error(f"Error in ChatAPIView: {e}", exc_info=True)
             return Response(
                 {"error": "An unexpected error occurred while processing your request."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
