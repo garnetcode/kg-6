@@ -5,7 +5,7 @@ from langchain_community.graphs import Neo4jGraph
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.documents import Document as LangchainDocument
-from langchain_community.chains import GraphCypherQAChain
+from langchain_community.chains.graph_qa.cypher import GraphCypherQAChain
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
