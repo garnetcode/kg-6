@@ -13,17 +13,20 @@ from langchain.prompts.prompt import PromptTemplate
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Custom prompt template to guide the LLM in generating Cypher queries
+# A more robust, directive-based prompt to guide the LLM
 CYPHER_GENERATION_TEMPLATE = """
-You are an expert Neo4j developer who is an expert at writing Cypher queries.
-Given the graph schema below, write a Cypher query that would answer the user's question.
-Do not use any properties that are not in the schema. Do not use any relationship types that are not in the schema.
-Return only the Cypher query, with no additional text or explanation.
+Task: Generate a Cypher query to answer a question.
+Instructions:
+1. Use only the provided graph schema. Do not use any other node labels, relationship types, or properties that are not explicitly listed in the schema.
+2. If the question cannot be answered using the provided schema, return the query: `RETURN "I am sorry, but I cannot answer this question based on the available information."`
+3. Do not include any of the user's private information in the query.
+4. Return only the Cypher query, with no other text, explanation, or preamble.
 
 Schema:
 {schema}
 
 Question: {question}
+Cypher Query:
 """
 CYPHER_GENERATION_PROMPT = PromptTemplate(
     input_variables=["schema", "question"], template=CYPHER_GENERATION_TEMPLATE
