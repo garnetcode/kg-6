@@ -1,0 +1,1 @@
+A neuro-symbolic agent is an AI system that combines neural networks with symbolic reasoning. It uses knowledge graphs to store structured information and large language models to process natural language. The agent can answer questions by converting them to graph queries and providing explanations based on the knowledge graph data.

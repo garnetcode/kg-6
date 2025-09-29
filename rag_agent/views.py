@@ -41,6 +41,8 @@ class ChatView(APIView):
             )
 
         question = request.data.get('question')
+        session_id = request.data.get('session_id')  # Optional session ID for conversation context
+
         if not question:
             return Response(
                 {"error": "A 'question' field is required."},
@@ -50,9 +52,13 @@ class ChatView(APIView):
         try:
             # Use the fastest available service
             service_type = "turbo" if rag_agent_config.turbo_reasoning_service else "enhanced"
-            logger.info(f"Using {service_type} service for query")
+            logger.info(f"Using {service_type} service for query with session_id: {session_id}")
 
-            answer = reasoning_service.query(question)
+            # Pass session_id for conversation context (always for turbo service)
+            if service_type == "turbo":
+                answer = reasoning_service.query(question, session_id=session_id)
+            else:
+                answer = reasoning_service.query(question)
 
             processing_time = time.time() - start_time
 

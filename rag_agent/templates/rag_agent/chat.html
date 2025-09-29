@@ -95,17 +95,49 @@
             background-color: #94a3b8;
             cursor: not-allowed;
         }
+        .conversation-controls {
+            padding: 0.5rem 1rem;
+            background-color: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        .new-conversation-btn {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .new-conversation-btn:hover {
+            background-color: #059669;
+        }
     </style>
 </head>
 <body>
     <div id="chat-container">
-        <header>Neuro-Symbolic Agent</header>
+        <header>
+            <div>Neuro-Symbolic Agent</div>
+            <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.25rem;">
+                Conversation ID: <span id="session-id">Initializing...</span>
+            </div>
+        </header>
         <div id="conversation">
             <div class="message assistant-message">
-                Hello! I am a Neuro-Symbolic Agent. I can answer questions based on my knowledge graph. Ask me anything!
+                Hello! I am a Neuro-Symbolic Agent with conversation memory. I can learn from our conversation and maintain context across our chat session. Ask me anything!
             </div>
         </div>
         <div id="loading" class="loading-indicator" style="display: none;">Thinking...</div>
+        <div class="conversation-controls">
+            <span>Conversation memory active</span>
+            <button class="new-conversation-btn" onclick="startNewConversation()">New Conversation</button>
+        </div>
         <form id="chat-form">
             <input type="text" id="question-input" placeholder="Ask a question..." autocomplete="off" required>
             <button type="submit">Send</button>
@@ -118,6 +150,15 @@
         const conversation = document.getElementById('conversation');
         const loadingIndicator = document.getElementById('loading');
         const submitButton = chatForm.querySelector('button');
+        const sessionIdElement = document.getElementById('session-id');
+
+        // Generate or retrieve session ID
+        let sessionId = localStorage.getItem('chat_session_id');
+        if (!sessionId) {
+            sessionId = 'chat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('chat_session_id', sessionId);
+        }
+        sessionIdElement.textContent = sessionId.substr(-8); // Show last 8 characters
 
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -141,7 +182,10 @@
                         'Content-Type': 'application/json',
                         'X-CSRFToken': getCookie('csrftoken'),
                     },
-                    body: JSON.stringify({ question: question }),
+                    body: JSON.stringify({
+                        question: question,
+                        session_id: sessionId
+                    }),
                 });
 
                 if (!response.ok) {
@@ -151,6 +195,11 @@
 
                 const data = await response.json();
                 appendMessage(data.answer, 'assistant');
+
+                // Show processing time if available
+                if (data.processing_time) {
+                    console.log(`Response time: ${data.processing_time}s (${data.service_type || 'unknown'} service)`);
+                }
 
             } catch (error) {
                 console.error('Error:', error);
@@ -187,6 +236,29 @@
             }
             return cookieValue;
         }
+
+        // Function to start a new conversation
+        function startNewConversation() {
+            if (confirm('Start a new conversation? This will clear the current chat and reset conversation memory.')) {
+                // Generate new session ID
+                sessionId = 'chat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('chat_session_id', sessionId);
+                sessionIdElement.textContent = sessionId.substr(-8);
+
+                // Clear conversation
+                conversation.innerHTML = `
+                    <div class="message assistant-message">
+                        Hello! I am a Neuro-Symbolic Agent with conversation memory. I can learn from our conversation and maintain context across our chat session. Ask me anything!
+                    </div>
+                `;
+
+                // Focus input
+                questionInput.focus();
+            }
+        }
+
+        // Focus input on load
+        questionInput.focus();
     </script>
 </body>
 </html>
