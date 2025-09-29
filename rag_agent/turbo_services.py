@@ -18,8 +18,8 @@ import diskcache as dc
 from joblib import Memory
 
 # LangChain Imports
-from langchain_community.graphs import Neo4jGraph
-from langchain_community.chains.graph_qa.cypher import GraphCypherQAChain
+from langchain_neo4j.graphs import Neo4jGraph
+from langchain.chains.graph_qa.cypher import GraphCypherQAChain
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.documents import Document as LangchainDocument
 from langchain.prompts.prompt import PromptTemplate
@@ -164,12 +164,14 @@ class ConversationGraph:
 
         with self.driver.session() as session:
             query = f"""
+            MATCH (conv:Conversation {{session_id: $session_id}})
             MATCH (s), (t)
             WHERE s.name = $source_name AND t.name = $target_name
             MERGE (s)-[r:{rel_type}]->(t)
             SET r += $properties,
                 r.conversation_id = $session_id,
                 r.created_at = datetime()
+            MERGE (conv)-[:HAS_RELATIONSHIP]->(r)
             """
             session.run(query,
                        session_id=self.session_id,
@@ -220,9 +222,8 @@ class ConversationGraph:
 
             # Get relationships from this conversation
             rel_query = """
-            MATCH (conv:Conversation {session_id: $session_id})
+            MATCH (conv:Conversation {session_id: $session_id})-[:HAS_RELATIONSHIP]->(rel)
             MATCH (s)-[rel]->(t)
-            WHERE rel.conversation_id = $session_id
             RETURN s.name as source, type(rel) as rel_type, t.name as target, properties(rel) as props
             ORDER BY rel.created_at DESC
             LIMIT 10
@@ -932,16 +933,22 @@ Helpful Answer based on our conversation:
             matches_conversational_pattern = any(pattern in question_lower for pattern in conversational_question_patterns)
 
             # CRITICAL: Only trigger for actual questions, not statements
-            is_conversational = matches_conversational_pattern and (has_question_word or has_question_mark)
+            is_memory_question = matches_conversational_pattern and (has_question_word or has_question_mark)
+
+            # Broader check for general conversational queries (e.g., greetings)
+            is_greeting = question_lower.strip() in ["hi", "hello", "hey", "greetings"]
+            is_conversational = is_memory_question or is_greeting
 
             # Enhanced debugging
             logger.info(f"🔍 Question Analysis: '{question_lower}'")
             logger.info(f"   Has question word: {has_question_word}")
             logger.info(f"   Has question mark: {has_question_mark}")
             logger.info(f"   Matches pattern: {matches_conversational_pattern}")
+            logger.info(f"   Is memory question: {is_memory_question}")
+            logger.info(f"   Is greeting: {is_greeting}")
             logger.info(f"   Is conversational: {is_conversational}")
 
-            if is_conversational and len(full_context) > 50:
+            if is_greeting or (is_memory_question and len(full_context) > 50):
                 logger.info("🎯 Detected conversational question - using direct QA approach")
                 # Use QA prompt directly with conversation context
                 qa_input = self.qa_prompt.format(context=full_context, query=question)
