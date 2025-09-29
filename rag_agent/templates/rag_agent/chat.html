@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neuro-Symbolic Agent</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #chat-container {
+            width: 80%;
+            max-width: 800px;
+            height: 90vh;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        header {
+            background-color: #4a5568;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-size: 1.25rem;
+        }
+        #conversation {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 18px;
+            max-width: 75%;
+            line-height: 1.4;
+        }
+        .user-message {
+            background-color: #3b82f6;
+            color: white;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+            margin-right: auto;
+        }
+        .assistant-message {
+            background-color: #e2e8f0;
+            color: #1a202c;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .loading-indicator {
+            text-align: center;
+            padding: 1rem;
+            color: #718096;
+        }
+        #chat-form {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+        #chat-form input {
+            flex-grow: 1;
+            border: 1px solid #cbd5e0;
+            border-radius: 20px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            margin-right: 0.5rem;
+        }
+        #chat-form button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #chat-form button:hover {
+            background-color: #2563eb;
+        }
+        #chat-form button:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <header>Neuro-Symbolic Agent</header>
+        <div id="conversation">
+            <div class="message assistant-message">
+                Hello! I am a Neuro-Symbolic Agent. I have read a document about my own architecture. Ask me a question about it.
+            </div>
+        </div>
+        <div id="loading" class="loading-indicator" style="display: none;">Thinking...</div>
+        <form id="chat-form">
+            <input type="text" id="question-input" placeholder="Ask a question..." autocomplete="off" required>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const questionInput = document.getElementById('question-input');
+        const conversation = document.getElementById('conversation');
+        const loadingIndicator = document.getElementById('loading');
+        const submitButton = chatForm.querySelector('button');
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const question = questionInput.value.trim();
+            if (!question) return;
+
+            // Display user's message
+            appendMessage(question, 'user');
+            questionInput.value = '';
+
+            // Show loading indicator and disable form
+            loadingIndicator.style.display = 'block';
+            submitButton.disabled = true;
+            questionInput.disabled = true;
+            conversation.scrollTop = conversation.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({ question: question }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'API request failed');
+                }
+
+                const data = await response.json();
+                appendMessage(data.answer, 'assistant');
+
+            } catch (error) {
+                console.error('Error:', error);
+                appendMessage(`Sorry, an error occurred: ${error.message}`, 'assistant');
+            } finally {
+                // Hide loading indicator and re-enable form
+                loadingIndicator.style.display = 'none';
+                submitButton.disabled = false;
+                questionInput.disabled = false;
+                questionInput.focus();
+            }
+        });
+
+        function appendMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', `${sender}-message`);
+            messageDiv.textContent = text;
+            conversation.appendChild(messageDiv);
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+
+        // Function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>
