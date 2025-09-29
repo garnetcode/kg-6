@@ -1,11 +1,19 @@
 import logging
 from django.conf import settings
 from neo4j import GraphDatabase
-from langchain_neo4j import Neo4jGraph
+
+# LangChain Imports - Compatibility Fix
+# The GraphCypherQAChain expects a Neo4jGraph object from the same `langchain_community`
+# package. Using the newer `langchain_neo4j.Neo4jGraph` with the older chain causes
+# a validation error. To ensure stability, we use the deprecated-but-compatible
+# versions from `langchain_community`.
+from langchain_community.graphs import Neo4jGraph
+from langchain_community.chains.graph_qa.cypher import GraphCypherQAChain
+
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.documents import Document as LangchainDocument
-from langchain_community.chains.graph_qa.cypher import GraphCypherQAChain
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
