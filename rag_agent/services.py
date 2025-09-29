@@ -18,8 +18,9 @@ CYPHER_GENERATION_TEMPLATE = """
 Task: Generate a Cypher query to answer a question.
 Instructions:
 1. Use only the provided graph schema. Do not use any other node labels, relationship types, or properties that are not explicitly listed in the schema.
-2. If the question cannot be answered using the provided schema, return the query: `RETURN "I am sorry, but I cannot answer this question based on the available information." AS result`
-3. Return only the Cypher query, with no other text, explanation, or preamble.
+2. If the question is a general greeting (like "hi", "hello", "how are you") or conversational query not related to the knowledge graph, return: `RETURN "CONVERSATIONAL_QUERY" AS result`
+3. If the question cannot be answered using the provided schema but is asking for factual information, return: `RETURN "NO_GRAPH_DATA" AS result`
+4. Return only the Cypher query, with no other text, explanation, or preamble.
 
 Schema:
 {schema}
@@ -33,9 +34,12 @@ CYPHER_GENERATION_PROMPT = PromptTemplate(
 
 # Prompt for synthesizing the final answer after the query is executed
 QA_TEMPLATE = """
-You are a helpful AI assistant. Given the context below, answer the user's question.
-The context is the result of a Cypher query. If the context is empty or contains the string "I am sorry...", it means the information was not found in the knowledge graph.
-In that case, respond conversationally that you don't have the information. Do not mention the database or the query.
+You are a helpful AI assistant and neuro-symbolic agent. Given the context below, answer the user's question appropriately.
+
+Context Analysis:
+- If context contains "CONVERSATIONAL_QUERY": This is a greeting or general conversation. Respond warmly and conversationally as a neuro-symbolic AI agent.
+- If context contains "NO_GRAPH_DATA": The question asked for factual information not in the knowledge graph. Politely explain you don't have that specific information.
+- If context contains actual data: Use the information to provide a helpful, accurate answer.
 
 Context:
 {context}

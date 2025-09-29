@@ -34,7 +34,7 @@ echo_green "Applying database migrations..."
 echo_green "Ingesting data into the Knowledge Graph. This is a one-time setup and can be lengthy..."
 # Use the --clear flag to ensure a fresh start
 ./manage.py ingest_data --clear
-
+USE_TURBO_MODE=true
 # 5. Start the Django development server
 echo_green "Starting the Django development server at http://0.0.0.0:8007/"
 echo "You can now access the application in your browser."

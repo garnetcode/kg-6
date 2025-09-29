@@ -18,3 +18,12 @@ requests
 beautifulsoup4
 lxml
 tiktoken
+spacy
+sentence-transformers
+numpy
+scikit-learn
+faiss-cpu
+asyncio
+aiohttp
+diskcache
+joblib
