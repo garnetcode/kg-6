@@ -1,10 +1,11 @@
 import logging
 from django.conf import settings
 from neo4j import GraphDatabase
-from langchain_neo4j import Neo4jGraph
+from langchain_community.graphs import Neo4jGraph
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.documents import Document as LangchainDocument
+from langchain_community.chains import GraphCypherQAChain
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,14 +38,12 @@ class KnowledgeGraphService:
         """
         logger.info("Starting text-to-graph conversion...")
 
-        # The LLMGraphTransformer expects a list of Langchain Documents
         documents = [LangchainDocument(page_content=text)]
 
         try:
             graph_documents = self.llm_transformer.convert_to_graph_documents(documents)
             logger.info(f"Successfully converted text to {len(graph_documents)} graph documents.")
 
-            # Add the extracted graph data to Neo4j
             self.graph.add_graph_documents(
                 graph_documents,
                 baseEntityLabel=True,
@@ -63,13 +62,6 @@ class KnowledgeGraphService:
         logger.warning("Clearing the entire Neo4j database...")
         self.graph.query("MATCH (n) DETACH DELETE n")
         logger.info("Graph cleared successfully.")
-
-# Example of how to use this service
-# from rag_agent.services import KnowledgeGraphService
-# kg_service = KnowledgeGraphService()
-# kg_service.text_to_graph("Elon Musk is the CEO of Tesla and SpaceX.")
-
-from langchain_neo4j.chains import GraphCypherQAChain
 
 class ReasoningService:
     def __init__(self):
@@ -90,13 +82,12 @@ class ReasoningService:
             temperature=0
         )
 
-        # Refresh the graph schema to ensure the LLM has the latest context
         self.graph.refresh_schema()
 
         self.cypher_chain = GraphCypherQAChain.from_llm(
             graph=self.graph,
             llm=self.llm,
-            verbose=True, # Set to True for debugging to see generated Cypher
+            verbose=True,
             allow_dangerous_requests=True,
         )
 
