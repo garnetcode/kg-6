@@ -113,6 +113,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 NEO4J_URI = env('NEO4J_URI', default='bolt://localhost:7687')
 NEO4J_USERNAME = env('NEO4J_USERNAME', default='neo4j')
 NEO4J_PASSWORD = env('NEO4J_PASSWORD', default='password')
+NEO4J_DATABASE = env('NEO4J_DATABASE', default='kg6')
 
 # Ollama Configuration
 OLLAMA_BASE_URL = env('OLLAMA_BASE_URL', default='http://localhost:11434')
@@ -139,6 +140,12 @@ REST_FRAMEWORK = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "filters": {
+        "suppress_openssl_warning": {
+            "()": "django.utils.log.CallbackFilter",
+            "callback": lambda record: "NotOpenSSLWarning" not in record.getMessage(),
+        }
+    },
     "formatters": {
         "verbose": {
             "format": "{levelname} {asctime} {module} {message}",
@@ -149,6 +156,7 @@ LOGGING = {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
+            "filters": ["suppress_openssl_warning"],
         },
     },
     "loggers": {

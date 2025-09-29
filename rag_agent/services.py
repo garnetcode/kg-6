@@ -1,11 +1,11 @@
 import logging
 from django.conf import settings
 from neo4j import GraphDatabase
-from langchain_community.graphs import Neo4jGraph
+from langchain_neo4j import Neo4jGraph
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.documents import Document as LangchainDocument
-from langchain_community.chains.graph_qa.cypher import GraphCypherQAChain
+from langchain_neo4j.chains import GraphCypherQAChain
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -15,12 +15,14 @@ class KnowledgeGraphService:
         self.neo4j_uri = settings.NEO4J_URI
         self.neo4j_user = settings.NEO4J_USERNAME
         self.neo4j_password = settings.NEO4J_PASSWORD
+        self.neo4j_database = settings.NEO4J_DATABASE
         self.ollama_base_url = settings.OLLAMA_BASE_URL
 
         self.graph = Neo4jGraph(
             url=self.neo4j_uri,
             username=self.neo4j_user,
-            password=self.neo4j_password
+            password=self.neo4j_password,
+            database=self.neo4j_database
         )
 
         self.llm = OllamaLLM(
@@ -68,12 +70,14 @@ class ReasoningService:
         self.neo4j_uri = settings.NEO4J_URI
         self.neo4j_user = settings.NEO4J_USERNAME
         self.neo4j_password = settings.NEO4J_PASSWORD
+        self.neo4j_database = settings.NEO4J_DATABASE
         self.ollama_base_url = settings.OLLAMA_BASE_URL
 
         self.graph = Neo4jGraph(
             url=self.neo4j_uri,
             username=self.neo4j_user,
-            password=self.neo4j_password
+            password=self.neo4j_password,
+            database=self.neo4j_database
         )
 
         self.llm = OllamaLLM(
